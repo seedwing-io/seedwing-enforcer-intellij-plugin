@@ -1,0 +1,1 @@
+rootProject.name = "seedwing-enforcer-intellij-plugin"
