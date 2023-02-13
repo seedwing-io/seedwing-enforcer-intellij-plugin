@@ -1,32 +1,23 @@
-package io.seedwing.enforcer.intellij.plugin.ui;
+package io.seedwing.enforcer.intellij.plugin.extension;
+
+import static io.seedwing.enforcer.intellij.plugin.Conversions.convertRange;
+import static io.seedwing.enforcer.intellij.plugin.Conversions.mapSeverity;
+import static io.seedwing.enforcer.intellij.plugin.lsp.ExtendedEditorEventManager.findManager;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DiagnosticTag;
-import org.eclipse.lsp4j.Range;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.wso2.lsp4intellij.IntellijLanguageClient;
-import org.wso2.lsp4intellij.client.languageserver.ServerStatus;
-import org.wso2.lsp4intellij.client.languageserver.wrapper.LanguageServerWrapper;
 import org.wso2.lsp4intellij.editor.EditorEventManager;
-import org.wso2.lsp4intellij.editor.EditorEventManagerBase;
-import org.wso2.lsp4intellij.utils.DocumentUtils;
-import org.wso2.lsp4intellij.utils.FileUtils;
 
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
-import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAware;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
-
-import io.seedwing.enforcer.intellij.plugin.lsp.ExtendedEditorEventManager;
 
 public class ExtendedAnnotator extends ExternalAnnotator<List<Diagnostic>, List<Diagnostic>> implements DumbAware {
     @Override
@@ -100,6 +91,10 @@ public class ExtendedAnnotator extends ExternalAnnotator<List<Diagnostic>, List<
                 builder = builder.tooltip(tooltip);
             }
 
+            // problem group
+
+            builder = builder.problemGroup(diagnostic::getSource);
+
             // now build the annotation
 
             builder
@@ -107,47 +102,4 @@ public class ExtendedAnnotator extends ExternalAnnotator<List<Diagnostic>, List<
         }
     }
 
-    private static @NotNull Optional<TextRange> convertRange(@NotNull Editor editor, @NotNull Range range) {
-        final int start = DocumentUtils.LSPPosToOffset(editor, range.getStart());
-        final int end = DocumentUtils.LSPPosToOffset(editor, range.getEnd());
-        if (start >= end) {
-            return Optional.empty();
-        }
-        return Optional.of(new TextRange(start, end));
-    }
-
-    private static HighlightSeverity mapSeverity(DiagnosticSeverity severity) {
-        switch (severity) {
-        case Error:
-            return HighlightSeverity.ERROR;
-        case Warning:
-            return HighlightSeverity.WARNING;
-        case Information:
-            return HighlightSeverity.WEAK_WARNING;
-        case Hint:
-            return HighlightSeverity.INFORMATION;
-        }
-
-        return HighlightSeverity.GENERIC_SERVER_ERROR_OR_WARNING;
-    }
-
-    private @NotNull Optional<ExtendedEditorEventManager> findManager(@NotNull PsiFile file) {
-        var languageServerWrapper = LanguageServerWrapper.forVirtualFile(file.getVirtualFile(), file.getProject());
-        if (languageServerWrapper == null || languageServerWrapper.getStatus() != ServerStatus.INITIALIZED) {
-            return Optional.empty();
-        }
-
-        var virtualFile = file.getVirtualFile();
-        if (FileUtils.isFileSupported(virtualFile) && IntellijLanguageClient.isExtensionSupported(virtualFile)) {
-            var uri = FileUtils.VFSToURI(virtualFile);
-            // Use file-level manager (needs fixing)
-
-            return Optional.ofNullable(EditorEventManagerBase.forUri(uri))
-                    .filter(ExtendedEditorEventManager.class::isInstance)
-                    .map(ExtendedEditorEventManager.class::cast);
-
-        } else {
-            return Optional.empty();
-        }
-    }
 }

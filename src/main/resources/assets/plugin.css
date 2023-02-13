@@ -1,0 +1,16 @@
+:root {
+    --vscode-editor-font-family: "monospace";
+    --vscode-editor-font-size: "inherit";
+    --vscode-editor-font-weight: "inherit";
+}
+
+html {
+    font-family: sans-serif;
+}
+
+code, pre {
+    font-family: monospace;
+}
+
+
+

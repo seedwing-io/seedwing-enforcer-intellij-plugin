@@ -4,13 +4,19 @@ import static org.wso2.lsp4intellij.utils.ApplicationUtils.computableReadAction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.jetbrains.annotations.NotNull;
+import org.wso2.lsp4intellij.IntellijLanguageClient;
 import org.wso2.lsp4intellij.client.languageserver.ServerOptions;
+import org.wso2.lsp4intellij.client.languageserver.ServerStatus;
 import org.wso2.lsp4intellij.client.languageserver.requestmanager.RequestManager;
 import org.wso2.lsp4intellij.client.languageserver.wrapper.LanguageServerWrapper;
 import org.wso2.lsp4intellij.editor.EditorEventManager;
+import org.wso2.lsp4intellij.editor.EditorEventManagerBase;
 import org.wso2.lsp4intellij.listeners.LSPCaretListenerImpl;
+import org.wso2.lsp4intellij.utils.FileUtils;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.openapi.editor.Editor;
@@ -46,6 +52,34 @@ public class ExtendedEditorEventManager extends EditorEventManager {
         );
     }
 
+    public static @NotNull Optional<ExtendedEditorEventManager> findManager(@NotNull PsiFile file) {
+        var languageServerWrapper = LanguageServerWrapper.forVirtualFile(file.getVirtualFile(), file.getProject());
+        if (languageServerWrapper == null || languageServerWrapper.getStatus() != ServerStatus.INITIALIZED) {
+            return Optional.empty();
+        }
+
+        var virtualFile = file.getVirtualFile();
+        if (FileUtils.isFileSupported(virtualFile) && IntellijLanguageClient.isExtensionSupported(virtualFile)) {
+            var uri = FileUtils.VFSToURI(virtualFile);
+            // Use file-level manager (needs fixing)
+
+            return cast(Optional.ofNullable(EditorEventManagerBase.forUri(uri)));
+
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public static @NotNull Optional<ExtendedEditorEventManager> findManager(@NotNull Editor editor) {
+        return cast(Optional.ofNullable(EditorEventManagerBase.forEditor(editor)));
+    }
+
+    static @NotNull Optional<ExtendedEditorEventManager> cast(Optional<? super EditorEventManagerBase> manager) {
+        return manager
+                .filter(ExtendedEditorEventManager.class::isInstance)
+                .map(ExtendedEditorEventManager.class::cast);
+    }
+
     @Override
     public void diagnostics(List<Diagnostic> diagnostics) {
         this.diagnostics = new ArrayList<>(diagnostics);
@@ -74,4 +108,5 @@ public class ExtendedEditorEventManager extends EditorEventManager {
             return null;
         });
     }
+
 }

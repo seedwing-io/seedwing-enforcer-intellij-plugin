@@ -48,15 +48,33 @@
         <externalAnnotator id="LSPAnnotator"
                            language="XML"
                            order="last"
-                           implementationClass="io.seedwing.enforcer.intellij.plugin.ui.ExtendedAnnotator"/>
+                           implementationClass="io.seedwing.enforcer.intellij.plugin.extension.ExtendedAnnotator"/>
 
         <externalAnnotator id="seedwing.test"
                            language=""
                            order="last"
                            implementationClass="io.seedwing.enforcer.intellij.plugin.TestAnnotator"/>
 
+        <codeInsight.codeVisionProvider
+                implementation="io.seedwing.enforcer.intellij.plugin.extension.ExtendedCodeVisionProvider"
+        />
+
+        <toolWindow id="seedwing.report"
+                    factoryClass="io.seedwing.enforcer.intellij.plugin.ui.ReportWindowFactory"
+                    doNotActivateOnStart="true"
+                    secondary="true"
+                    anchor="right"
+                    canCloseContents="true"
+                    icon="AllIcons.Actions.Preview"
+        />
+
+        <!-- managing report views -->
+        <applicationService
+                serviceImplementation="io.seedwing.enforcer.intellij.plugin.service.ReportService"/>
+
         <!-- showing discovered dependencies -->
-        <toolWindow id="Discovered dependencies" secondary="true" icon="AllIcons.General.Modified" anchor="right"
+        <toolWindow id="Discovered dependencies" secondary="true"
+                    icon="AllIcons.Toolwindows.ToolWindowModuleDependencies" anchor="right"
                     factoryClass="io.seedwing.enforcer.intellij.plugin.ui.DependenciesToolWindowFactory"/>
 
         <!-- holding the state of discovered dependencies -->

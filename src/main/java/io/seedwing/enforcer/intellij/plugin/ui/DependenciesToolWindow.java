@@ -47,7 +47,6 @@ public class DependenciesToolWindow {
         this.model = new DefaultTreeModel(this.root);
 
         this.contentTree.setModel(this.model);
-        //this.contentTree.setCellRenderer(new DefaultTreeCellRenderer());
     }
 
     private void setDependencies(Map<String, List<Dependency>> dependencies) {

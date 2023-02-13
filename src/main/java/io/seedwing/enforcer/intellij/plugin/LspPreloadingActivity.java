@@ -1,13 +1,18 @@
 package io.seedwing.enforcer.intellij.plugin;
 
+import static io.seedwing.enforcer.intellij.plugin.lsp.ExtensionManager.TypedCommandHandler.typedGsonHandler;
+
 import org.jetbrains.annotations.NotNull;
 import org.wso2.lsp4intellij.IntellijLanguageClient;
 import org.wso2.lsp4intellij.client.languageserver.serverdefinition.ProcessBuilderServerDefinition;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PreloadingActivity;
 import com.intellij.openapi.progress.ProgressIndicator;
 
 import io.seedwing.enforcer.intellij.plugin.lsp.ExtensionManager;
+import io.seedwing.enforcer.intellij.plugin.protocol.commands.SeedwingReport;
+import io.seedwing.enforcer.intellij.plugin.service.ReportService;
 
 public class LspPreloadingActivity extends PreloadingActivity {
     @Override
@@ -26,9 +31,16 @@ public class LspPreloadingActivity extends PreloadingActivity {
 
         String exts = ".enforcer.yaml,dog,pom.xml";
 
+        var manager = new ExtensionManager()
+                .registerLocalCommand(SeedwingReport.ID, typedGsonHandler(SeedwingReport[].class, report -> {
+                    ApplicationManager.getApplication()
+                            .getService(ReportService.class)
+                            .showReport(report);
+                }));
+
         IntellijLanguageClient.addServerDefinition(new ProcessBuilderServerDefinition(exts, builder));
         for (var ext : exts.split(",")) {
-            IntellijLanguageClient.addExtensionManager(ext, new ExtensionManager());
+            IntellijLanguageClient.addExtensionManager(ext, manager);
         }
 
     }
