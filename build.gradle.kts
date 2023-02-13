@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.12.0"
+    id("org.jetbrains.intellij") version "1.13.0"
 }
 
 group = "io.seedwing.enforcer"
@@ -28,6 +28,16 @@ intellij {
 
 dependencies {
     implementation("com.github.ballerina-platform:lsp4intellij:0.95.1")
+    constraints {
+        implementation("com.google.guava:guava:31.1-jre") {
+            because("CVE-2020-8908")
+        }
+    }
+
+    // it is possible to use local "JAR" file instead of a dependency which comes from jitpack.io. This can be
+    // done by compiling the JAR file, and the placing it in the folder "vendor". In this case, disable the
+    // dependency line above (for "com.github.ballerina-platform:lsp4intellij:0.95.1") and enable the following
+    // dependencies. In the case of using a local jar, transient dependencies must be declared explicitly.
     //implementation(files("vendor/lsp4intellij-0.0.1-SNAPSHOT.jar"))
 
     // The following are only needed when we "vendor" the lsp4intellij JAR
